@@ -1,11 +1,8 @@
 class world{
-    constructor(gravity, worldWidth, worldHeight, step, scale){
-        this.gravity = gravity;
-        this.worldWidth = worldWidth;
-        this.worldHeight = worldHeight;
+    constructor(canvasWidth, canvasHeight, scale){
+        this.worldWidth = canvasWidth / scale;
+        this.worldHeight = canvasHeight / scale;
         this.scale = scale;
-        this.step = step;
-        this.frame = 0;
         this.cells = [];
         for(let i = 0; i < this.worldWidth; i++){
             this.cells.push([]);
@@ -25,7 +22,8 @@ class world{
         }
         this.particles.push({
             cell: new Vec2(x, y),
-            type: "sand"
+            type: "sand",
+            status: "active"
         });
         this.cells[x][y].status = "ocupied";
         this.cells[x][y].particle = "sand";
@@ -34,8 +32,9 @@ class world{
     render(){
         for(let i = 0; i < this.particles.length; i++){
             let cell = this.particles[i].cell;
+            let color = "rgb(255, 255, 100)"
             let pos = new Vec2(cell.x * this.scale  + this.scale / 2, cell.y * this.scale + this.scale / 2)
-            rectangle(pos, this.scale / 2, this.scale / 2, {fill: "rgb(255, 255, 160)"}, {rend:"fill"});
+            rectangle(pos, this.scale / 2, this.scale / 2, {fill: color}, {rend:"fill"});
         }
 
         for(let i = 0; i < this.worldWidth; i++){
@@ -44,29 +43,40 @@ class world{
     }
 
     particleUpdate(i){
+        if(this.particles[i].status == "inactive"){
+            return;
+        }
         let x = this.particles[i].cell.x;
         let y = this.particles[i].cell.y;
-        if(x == this.worldWidth - 1 || x == -1){
+        this.particles[i].cell.x = clamp(0, this.worldWidth - 1, x);
+        this.particles[i].cell.y = clamp(0, this.worldHeight - 1, y);
+        if(y + 1 > this.worldHeight - 1){
+            this.particles[i].status = "inactive";
             return;
         }
-        if(y == this.worldHeight - 1 || y == -1){
-            return;
-        }
-
         if(this.cells[x][y + 1].status == "empty"){
             this.particles[i].cell.y ++;
             this.cells[x][y + 1].status = "ocupied";
             this.cells[x][y + 1].particle = this.particles[i].type;
             this.cells[x][y].status = "empty";
             this.cells[x][y].particle = null;
+            this.particles[i].status = "active";
             return;
         }
         if(x - 1 < 0){
+            this.particles[i].status = "inactive";
             return;
         } 
         if(x + 1 > this.cells.length - 1){
+            this.particles[i].status = "inactive";
             return;
-        } 
+        }
+        if(y + 2 <= this.worldHeight - 1){
+            if(this.cells[x][y + 2].status == "empty"){
+                return;
+            }
+        }
+        
         if(this.cells[x - 1][y + 1].status == "empty"){
             this.particles[i].cell.y ++;
             this.particles[i].cell.x --;
@@ -74,6 +84,8 @@ class world{
             this.cells[x - 1][y + 1].particle = this.particles[i].type;
             this.cells[x][y].status = "empty";
             this.cells[x][y].particle = null;
+            this.particles[i].status = "active";
+            return;
         } else if(this.cells[x + 1][y + 1].status == "empty"){
             this.particles[i].cell.y ++;
             this.particles[i].cell.x ++;
@@ -81,16 +93,15 @@ class world{
             this.cells[x + 1][y + 1].particle = this.particles[i].type;
             this.cells[x][y].status = "empty";
             this.cells[x][y].particle = null;
+            this.particles[i].status = "active";
+            return;
         }
+
     }
 
     update(){
-        this.frame++;
-        if(this.frame > this.step){
-            for(let i = 0; i < this.particles.length; i++){
-                this.particleUpdate(i);
-            }
-            this.frame = 0;
+        for(let i = 0; i < this.particles.length; i++){
+            let a = this.particleUpdate(i); 
         }
     }
 };
