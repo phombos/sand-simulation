@@ -23,14 +23,7 @@ window.requestAnimationFrame(function loop(){
 	World.update();
 	World.render();
 	step += dt;
-	if(keys.one == true){
-		for(let i = mouse.x - 2; i < mouse.x + 3; i++){
-			for(let j = mouse.y - 2; j < mouse.y + 3; j++){
-				World.addSand(i, j);
-			}
-		}
-		
-	}
+	World.addSand(40, 1);
 	
 	window.requestAnimationFrame(loop);
 });
